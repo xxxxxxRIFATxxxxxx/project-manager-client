@@ -1,7 +1,9 @@
 import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
 import Auth from "./features/auth/Auth";
 import useAuthCheck from "./features/auth/useAuthCheck";
+import PrivateRoute from "./features/router/PrivateRoute";
 import PublicRoute from "./features/router/PublicRoute";
+import Teams from "./features/teams/Teams";
 
 export default function App() {
     const authChecked = useAuthCheck();
@@ -23,6 +25,15 @@ export default function App() {
                 <PublicRoute>
                   <Auth />
                 </PublicRoute>
+              }
+            />
+
+            <Route
+              path="/teams"
+              element={
+                <PrivateRoute>
+                  <Teams />
+                </PrivateRoute>
               }
             />
           </Routes>
