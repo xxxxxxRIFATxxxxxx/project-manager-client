@@ -5,7 +5,7 @@ import ProjectDeleteModal from './ProjectDeleteModal';
 const Project = ({ project }) => {
     const [ showModal, setShowModal ] = useState(false);
 
-    const { id, name, title, color, status, timestamp, creator } = project;
+    const { name, title, color, status, timestamp, creator, style } = project;
 
     // Create Date
     const date = new Date(timestamp);
@@ -27,7 +27,7 @@ const Project = ({ project }) => {
             { showModal && <ProjectDeleteModal setShowModal={setShowModal} project={project} /> }
 
             <div
-                className="relative flex flex-col items-start p-4 mt-3 bg-white rounded-lg cursor-pointer bg-opacity-90 group hover:bg-opacity-100"
+                className={`${style} relative flex flex-col items-start p-4 mt-3 bg-white rounded-lg cursor-pointer bg-opacity-90 group hover:bg-opacity-100`}
                 draggable="true"
                 ref={drag}
             >

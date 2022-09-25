@@ -22,6 +22,25 @@ const Projects = () => {
     const [ doneProjects, setDoneProjects ] = useState([]);
 
     const [ showModal, setShowModal ] = useState(false);
+
+    // Search
+    const debounceHandler = (fn, delay) => {
+        let timeoutId;
+        return (...args) => {
+            clearTimeout(timeoutId);
+            timeoutId = setTimeout(() => {
+                fn(...args);
+            }, delay);
+        };
+    };
+
+    const doSearch = (value) => {
+        const searchResult = projects.filter(project => project.title.includes(value));
+        console.log(searchResult)
+    };
+
+    const handleSearch = debounceHandler(doSearch, 500);
+
     const dispatch = useDispatch();
 
     const handleLogout = () => {
@@ -191,7 +210,8 @@ const Projects = () => {
                     <input
                         className="flex items-center h-10 px-4 ml-10 text-sm bg-gray-200 rounded-full focus:outline-none focus:ring"
                         type="search"
-                        placeholder="Search for anything…"
+                        placeholder="Search for projects…"
+                        onChange={(e) => handleSearch(e.target.value)}
                     />
 
                     <div className="ml-10">
