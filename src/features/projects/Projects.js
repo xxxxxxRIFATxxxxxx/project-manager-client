@@ -1,31 +1,176 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
+import { useDrop } from 'react-dnd';
 import { useDispatch } from 'react-redux';
 import { Link, redirect } from 'react-router-dom';
 import { userLoggedOut } from '../auth/authSlice';
 import logo from "./assets/logo.png";
 import Project from './Project';
 import ProjectCreateModal from './ProjectCreateModal';
-import { useGetProjectsQuery } from './projectsApi';
+import { useGetProjectsQuery, useUpdateProjectMutation } from './projectsApi';
 import ProjectsError from './ProjectsError';
 import ProjectsLoadingScreen from './ProjectsLoadingScreen';
 
 const Projects = () => {
-    const [ showModal, setShowModal ] = useState(false);
     const { data: projects, isLoading, error } = useGetProjectsQuery();
-    const dispatch = useDispatch();
+    const [ updateProject ] = useUpdateProjectMutation();
 
-    const backlogProjects = projects?.filter(project => project.status === "backlog");
-    const readyProjects = projects?.filter(project => project.status === "ready");
-    const doingProjects = projects?.filter(project => project.status === "doing");
-    const reviewProjects = projects?.filter(project => project.status === "review");
-    const blockedProjects = projects?.filter(project => project.status === "blocked");
-    const doneProjects = projects?.filter(project => project.status === "done");
+    const [ backlogProjects, setBacklogProjects ] = useState([]);
+    const [ readyProjects, setReadyProjects ] = useState([]);
+    const [ doingProjects, setDoingProjects ] = useState([]);
+    const [ reviewProjects, setReviewProjects ] = useState([]);
+    const [ blockedProjects, setBlockedProjects ] = useState([]);
+    const [ doneProjects, setDoneProjects ] = useState([]);
+
+    const [ showModal, setShowModal ] = useState(false);
+    const dispatch = useDispatch();
 
     const handleLogout = () => {
         dispatch(userLoggedOut()); 
         localStorage.clear();
         redirect("/");
     };
+
+    // Drop
+    const [{}, dropBacklog] = useDrop(() => ({
+        accept: 'PROJECT',
+
+        drop: (project) => {
+            setBacklogProjects((prevState) => {
+                return [project, ...prevState];
+            });
+
+            updateProject({
+                id: project.id,
+                data: {
+                    status: "backlog"
+                }
+            });
+        },
+
+        collect: (monitor) => ({
+          isOver: monitor.isOver(),
+          canDrop: monitor.canDrop()
+        })
+    }));
+
+    const [{}, dropReady] = useDrop(() => ({
+        accept: 'PROJECT',
+
+        drop: (project) => {
+            setReadyProjects((prevState) => {
+                return [project, ...prevState];
+            });
+
+            updateProject({
+                id: project.id,
+                data: {
+                    status: "ready"
+                }
+            });
+        },
+
+        collect: (monitor) => ({
+          isOver: monitor.isOver(),
+          canDrop: monitor.canDrop()
+        })
+    }));
+
+    const [{}, dropDoing] = useDrop(() => ({
+        accept: 'PROJECT',
+
+        drop: (project) => {
+            setDoingProjects((prevState) => {
+                return [project, ...prevState];
+            });
+
+            updateProject({
+                id: project.id,
+                data: {
+                    status: "doing"
+                }
+            });
+        },
+
+        collect: (monitor) => ({
+          isOver: monitor.isOver(),
+          canDrop: monitor.canDrop()
+        })
+    }));
+
+    const [{}, dropReview] = useDrop(() => ({
+        accept: 'PROJECT',
+
+        drop: (project) => {
+            setReviewProjects((prevState) => {
+                return [project, ...prevState];
+            });
+
+            updateProject({
+                id: project.id,
+                data: {
+                    status: "review"
+                }
+            });
+        },
+
+        collect: (monitor) => ({
+          isOver: monitor.isOver(),
+          canDrop: monitor.canDrop()
+        })
+    }));
+
+    const [{}, dropBlocked] = useDrop(() => ({
+        accept: 'PROJECT',
+
+        drop: (project) => {
+            setBlockedProjects((prevState) => {
+                return [project, ...prevState];
+            });
+
+            updateProject({
+                id: project.id,
+                data: {
+                    status: "blocked"
+                }
+            });
+        },
+
+        collect: (monitor) => ({
+          isOver: monitor.isOver(),
+          canDrop: monitor.canDrop()
+        })
+    }));
+
+    const [{}, dropDone] = useDrop(() => ({
+        accept: 'PROJECT',
+
+        drop: (project) => {
+            setDoneProjects((prevState) => {
+                return [project, ...prevState];
+            });
+
+            updateProject({
+                id: project.id,
+                data: {
+                    status: "done"
+                }
+            });
+        },
+
+        collect: (monitor) => ({
+          isOver: monitor.isOver(),
+          canDrop: monitor.canDrop()
+        })
+    }));
+
+    useEffect(() => {
+        setBacklogProjects(projects?.filter(project => project.status === "backlog"));
+        setReadyProjects(projects?.filter(project => project.status === "ready"));
+        setDoingProjects(projects?.filter(project => project.status === "doing"));
+        setReviewProjects(projects?.filter(project => project.status === "review"));
+        setBlockedProjects(projects?.filter(project => project.status === "blocked"));
+        setDoneProjects(projects?.filter(project => project.status === "done"));
+    }, [projects]);
 
     return (
         <>
@@ -88,7 +233,7 @@ const Projects = () => {
                 
                 <div className="flex flex-grow px-10 mt-4 space-x-6 overflow-auto">
                     {/* Backlog Stage */}
-                    <div className="flex flex-col flex-shrink-0 w-72">
+                    <div className="flex flex-col flex-shrink-0 w-72" ref={dropBacklog}>
                         <div className="flex items-center flex-shrink-0 h-10 px-2">
                             <span className="block text-sm font-semibold">Backlog</span>
                             <span
@@ -123,17 +268,13 @@ const Projects = () => {
                             { error && <ProjectsError error={error} title="Error" /> }
 
                             { 
-                                projects?.map((project) => {
-                                    if (project.status === "backlog") {
-                                        return <Project key={project.id} project={project} />  
-                                    };
-                                })
+                                backlogProjects?.map((project) => <Project key={project.id} project={project} />)
                             }
                         </div>
                     </div>
 
                     {/* Ready Stage */}
-                    <div className="flex flex-col flex-shrink-0 w-72">
+                    <div className="flex flex-col flex-shrink-0 w-72" ref={dropReady}>
                         <div className="flex items-center flex-shrink-0 h-10 px-2">
                             <span className="block text-sm font-semibold">Ready</span>
 
@@ -150,17 +291,13 @@ const Projects = () => {
                             { error && <ProjectsError error={error} title="Error" /> }
 
                             { 
-                                projects?.map((project) => {
-                                    if (project.status === "ready") {
-                                        return <Project key={project.id} project={project} />  
-                                    };
-                                })
+                                readyProjects?.map((project) => <Project key={project.id} project={project} />)
                             }
                         </div>
                     </div>
 
                     {/* Doing Stage */}
-                    <div className="flex flex-col flex-shrink-0 w-72">
+                    <div className="flex flex-col flex-shrink-0 w-72" ref={dropDoing}>
                         <div className="flex items-center flex-shrink-0 h-10 px-2">
                             <span className="block text-sm font-semibold">Doing</span>
 
@@ -177,17 +314,13 @@ const Projects = () => {
                             { error && <ProjectsError error={error} title="Error" /> }
 
                             { 
-                                projects?.map((project) => {
-                                    if (project.status === "doing") {
-                                      return <Project key={project.id} project={project} />  
-                                    };
-                                })
+                                doingProjects?.map((project) => <Project key={project.id} project={project} />)
                             }
                         </div>
                     </div>
 
                     {/* Review Stage */}
-                    <div className="flex flex-col flex-shrink-0 w-72">
+                    <div className="flex flex-col flex-shrink-0 w-72" ref={dropReview}>
                         <div className="flex items-center flex-shrink-0 h-10 px-2">
                             <span className="block text-sm font-semibold">Review</span>
 
@@ -204,17 +337,13 @@ const Projects = () => {
                             { error && <ProjectsError error={error} title="Error" /> }
 
                             { 
-                                projects?.map((project) => {
-                                    if (project.status === "review") {
-                                        return <Project key={project.id} project={project} />  
-                                    };
-                                })
+                                reviewProjects?.map((project) => <Project key={project.id} project={project} />)
                             }
                         </div>
                     </div>
 
                     {/* Blocked Stage */}
-                    <div className="flex flex-col flex-shrink-0 w-72">
+                    <div className="flex flex-col flex-shrink-0 w-72" ref={dropBlocked}>
                         <div className="flex items-center flex-shrink-0 h-10 px-2">
                             <span className="block text-sm font-semibold">Blocked</span>
 
@@ -231,17 +360,13 @@ const Projects = () => {
                             { error && <ProjectsError error={error} title="Error" /> }
 
                             { 
-                                projects?.map((project) => {
-                                    if (project.status === "blocked") {
-                                        return <Project key={project.id} project={project} />  
-                                    };
-                                })
+                                blockedProjects?.map((project) => <Project key={project.id} project={project} />)
                             }
                         </div>
                     </div>
                     
                     {/* Done Stage */}
-                    <div className="flex flex-col flex-shrink-0 w-72">
+                    <div className="flex flex-col flex-shrink-0 w-72" ref={dropDone}>
                         <div className="flex items-center flex-shrink-0 h-10 px-2">
                             <span className="block text-sm font-semibold">Done</span>
                             <span
@@ -257,11 +382,7 @@ const Projects = () => {
                             { error && <ProjectsError error={error} title="Error" /> }
 
                             { 
-                                projects?.map((project) => {
-                                    if (project.status === "done") {
-                                        return <Project key={project.id} project={project} />  
-                                    };
-                                })
+                                doneProjects?.map((project) => <Project key={project.id} project={project} />)
                             }
                         </div>
                     </div>
