@@ -1,15 +1,26 @@
-import React from 'react';
-import { useSelector } from 'react-redux';
-import { Link } from 'react-router-dom';
+import React, { useState } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
+import { Link, redirect } from 'react-router-dom';
+import { userLoggedOut } from '../auth/authSlice';
 import logo from "./assets/logo.png";
+import CreateTeamModal from './CreateTeamModal';
 import Team from './Team';
 import { useGetTeamsQuery } from './teamsApi';
 import TeamsError from './TeamsError';
 import TeamLoadingScreen from './TeamsLoadingScreen';
 
 const Teams = () => {
-    const { data: teams, isLoading, isError, error } = useGetTeamsQuery();
-    const { img } = useSelector(state => state.auth.user);
+    const auth = useSelector((state) => state.auth);
+    const [ showModal, setShowModal ] = useState(false);
+    const { data: teams, isLoading, isError, error } = useGetTeamsQuery(auth.user.email);
+    
+    const dispatch = useDispatch();
+
+    const handleLogout = () => {
+        dispatch(userLoggedOut()); 
+        localStorage.clear();
+        redirect("/");
+    };
 
     // decide what to render
     let content = null;
@@ -20,7 +31,7 @@ const Teams = () => {
     
     else if (!isLoading && isError) {
         content = (
-            <TeamsError error={error} />
+            <TeamsError error={error} title="Teams Data Fetching Error" />
         );
     } 
     
@@ -29,11 +40,13 @@ const Teams = () => {
     } 
     
     else if (!isLoading && !isError && teams?.length > 0) {
-        content = teams.map(team => <Team key={team.id} team={team} />)
+        content = teams.map(team => <Team key={team.id} team={team} /> );
     };
 
     return (
         <>
+            { showModal && <CreateTeamModal setShowModal={setShowModal} /> }
+
             <div
                 className="flex flex-col w-screen h-screen overflow-auto text-gray-700 bg-gradient-to-tr from-blue-200 via-indigo-200 to-pink-200"
             >
@@ -44,25 +57,32 @@ const Teams = () => {
 
                     <div className="ml-10">
                         <Link
-                            className="mx-2 text-sm font-semibold text-indigo-700"
+                            className="mx-2 text-sm font-semibold text-gray-600 hover:text-indigo-700"
                             to="/projects"
                         >
                             Projects
                         </Link>
 
                         <Link
-                            className="mx-2 text-sm font-semibold text-gray-600 hover:text-indigo-700"
+                            className="mx-2 text-sm font-semibold text-indigo-700"
                             to="/teams"
                         >
-                            Team
+                            Teams
                         </Link>
+
+                        <button
+                            className="mx-2 text-sm font-semibold text-gray-600 hover:text-indigo-700"
+                            onClick={handleLogout}
+                        >
+                            Logout
+                        </button>
                     </div>
 
                     <button
                         className="flex items-center justify-center w-8 h-8 ml-auto overflow-hidden rounded-full cursor-pointer"
                     >
                         <img
-                            src={img}
+                            src={auth.user.img}
                             alt=""
                         />
                     </button>
@@ -73,6 +93,7 @@ const Teams = () => {
 
                     <button
                         className="flex items-center justify-center w-6 h-6 ml-auto text-indigo-500 rounded hover:bg-indigo-500 hover:text-indigo-100"
+                        onClick={() => setShowModal(true)}
                     >
                         <svg
                             className="w-5 h-5"

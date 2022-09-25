@@ -1,0 +1,276 @@
+import React, { useState } from 'react';
+import { useDispatch } from 'react-redux';
+import { Link, redirect } from 'react-router-dom';
+import { userLoggedOut } from '../auth/authSlice';
+import logo from "./assets/logo.png";
+import Project from './Project';
+import ProjectCreateModal from './ProjectCreateModal';
+import { useGetProjectsQuery } from './projectsApi';
+import ProjectsError from './ProjectsError';
+import ProjectsLoadingScreen from './ProjectsLoadingScreen';
+
+const Projects = () => {
+    const [ showModal, setShowModal ] = useState(false);
+    const { data: projects, isLoading, error } = useGetProjectsQuery();
+    const dispatch = useDispatch();
+
+    const backlogProjects = projects?.filter(project => project.status === "backlog");
+    const readyProjects = projects?.filter(project => project.status === "ready");
+    const doingProjects = projects?.filter(project => project.status === "doing");
+    const reviewProjects = projects?.filter(project => project.status === "review");
+    const blockedProjects = projects?.filter(project => project.status === "blocked");
+    const doneProjects = projects?.filter(project => project.status === "done");
+
+    const handleLogout = () => {
+        dispatch(userLoggedOut()); 
+        localStorage.clear();
+        redirect("/");
+    };
+
+    return (
+        <>
+            { showModal && <ProjectCreateModal setShowModal={setShowModal} /> }
+
+            <div
+                className="flex flex-col w-screen h-screen overflow-auto text-gray-700 bg-gradient-to-tr from-blue-200 via-indigo-200 to-pink-200"
+            >
+                <div
+                    className="flex items-center flex-shrink-0 w-full h-16 px-10 bg-white bg-opacity-75"
+                >
+                    <img 
+                        src={logo} 
+                        className="h-10 w-10" 
+                        alt="" 
+                    />
+                    
+                    <input
+                        className="flex items-center h-10 px-4 ml-10 text-sm bg-gray-200 rounded-full focus:outline-none focus:ring"
+                        type="search"
+                        placeholder="Search for anything…"
+                    />
+
+                    <div className="ml-10">
+                        <Link
+                            className="mx-2 text-sm font-semibold text-indigo-700"
+                            to="/projects"
+                        >
+                            Projects
+                        </Link>
+
+                        <Link 
+                            className="mx-2 text-sm font-semibold text-gray-600 hover:text-indigo-700"
+                            to="/teams"
+                        >
+                            Teams
+                        </Link>
+
+                        <button
+                            className="mx-2 text-sm font-semibold text-gray-600 hover:text-indigo-700"
+                            onClick={handleLogout}
+                        >
+                            Logout
+                        </button>
+                    </div>
+
+                    <button
+                        className="flex items-center justify-center w-8 h-8 ml-auto overflow-hidden rounded-full cursor-pointer"
+                    >
+                        <img
+                            src="https://assets.codepen.io/5041378/internal/avatars/users/default.png?fit=crop&format=auto&height=512&version=1600304177&width=512"
+                            alt=""
+                        />
+                    </button>
+                </div>
+
+                <div className="px-10 mt-6">
+                    <h1 className="text-2xl font-bold">Project Board</h1>
+                </div>
+                
+                <div className="flex flex-grow px-10 mt-4 space-x-6 overflow-auto">
+                    {/* Backlog Stage */}
+                    <div className="flex flex-col flex-shrink-0 w-72">
+                        <div className="flex items-center flex-shrink-0 h-10 px-2">
+                            <span className="block text-sm font-semibold">Backlog</span>
+                            <span
+                                className="flex items-center justify-center w-5 h-5 ml-2 text-sm font-semibold text-indigo-500 bg-white rounded bg-opacity-30"
+                            >
+                                { backlogProjects?.length }
+                            </span>
+
+                            <button
+                                className="flex items-center justify-center w-6 h-6 ml-auto text-indigo-500 rounded hover:bg-indigo-500 hover:text-indigo-100"
+                                onClick={() => setShowModal(true)}
+                            >
+                                <svg
+                                    className="w-5 h-5"
+                                    fill="none"
+                                    viewBox="0 0 24 24"
+                                    stroke="currentColor"
+                                >
+                                    <path
+                                        strokeLinecap="round"
+                                        strokeLinejoin="round"
+                                        strokeWidth="2"
+                                        d="M12 6v6m0 0v6m0-6h6m-6 0H6"
+                                    ></path>
+                                </svg>
+                            </button>
+                        </div>
+
+                        <div className="flex flex-col pb-2 overflow-auto">
+                            { isLoading && <ProjectsLoadingScreen /> }
+
+                            { error && <ProjectsError error={error} title="Error" /> }
+
+                            { 
+                                projects?.map((project) => {
+                                    if (project.status === "backlog") {
+                                        return <Project key={project.id} project={project} />  
+                                    };
+                                })
+                            }
+                        </div>
+                    </div>
+
+                    {/* Ready Stage */}
+                    <div className="flex flex-col flex-shrink-0 w-72">
+                        <div className="flex items-center flex-shrink-0 h-10 px-2">
+                            <span className="block text-sm font-semibold">Ready</span>
+
+                            <span
+                                className="flex items-center justify-center w-5 h-5 ml-2 text-sm font-semibold text-indigo-500 bg-white rounded bg-opacity-30"
+                            >
+                                { readyProjects?.length }
+                            </span>
+                        </div>
+
+                        <div className="flex flex-col pb-2 overflow-auto">
+                            { isLoading && <ProjectsLoadingScreen /> }
+
+                            { error && <ProjectsError error={error} title="Error" /> }
+
+                            { 
+                                projects?.map((project) => {
+                                    if (project.status === "ready") {
+                                        return <Project key={project.id} project={project} />  
+                                    };
+                                })
+                            }
+                        </div>
+                    </div>
+
+                    {/* Doing Stage */}
+                    <div className="flex flex-col flex-shrink-0 w-72">
+                        <div className="flex items-center flex-shrink-0 h-10 px-2">
+                            <span className="block text-sm font-semibold">Doing</span>
+
+                            <span
+                                className="flex items-center justify-center w-5 h-5 ml-2 text-sm font-semibold text-indigo-500 bg-white rounded bg-opacity-30"
+                            >
+                                { doingProjects?.length }
+                            </span>
+                        </div>
+
+                        <div className="flex flex-col pb-2 overflow-auto">
+                            { isLoading && <ProjectsLoadingScreen /> }
+
+                            { error && <ProjectsError error={error} title="Error" /> }
+
+                            { 
+                                projects?.map((project) => {
+                                    if (project.status === "doing") {
+                                      return <Project key={project.id} project={project} />  
+                                    };
+                                })
+                            }
+                        </div>
+                    </div>
+
+                    {/* Review Stage */}
+                    <div className="flex flex-col flex-shrink-0 w-72">
+                        <div className="flex items-center flex-shrink-0 h-10 px-2">
+                            <span className="block text-sm font-semibold">Review</span>
+
+                            <span
+                                className="flex items-center justify-center w-5 h-5 ml-2 text-sm font-semibold text-indigo-500 bg-white rounded bg-opacity-30"
+                            >
+                                { reviewProjects?.length }
+                            </span>
+                        </div>
+
+                        <div className="flex flex-col pb-2 overflow-auto">
+                            { isLoading && <ProjectsLoadingScreen /> }
+
+                            { error && <ProjectsError error={error} title="Error" /> }
+
+                            { 
+                                projects?.map((project) => {
+                                    if (project.status === "review") {
+                                        return <Project key={project.id} project={project} />  
+                                    };
+                                })
+                            }
+                        </div>
+                    </div>
+
+                    {/* Blocked Stage */}
+                    <div className="flex flex-col flex-shrink-0 w-72">
+                        <div className="flex items-center flex-shrink-0 h-10 px-2">
+                            <span className="block text-sm font-semibold">Blocked</span>
+
+                            <span
+                                className="flex items-center justify-center w-5 h-5 ml-2 text-sm font-semibold text-indigo-500 bg-white rounded bg-opacity-30"
+                            >
+                                { blockedProjects?.length }
+                            </span>
+                        </div>
+
+                        <div className="flex flex-col pb-2 overflow-auto">
+                            { isLoading && <ProjectsLoadingScreen /> }
+
+                            { error && <ProjectsError error={error} title="Error" /> }
+
+                            { 
+                                projects?.map((project) => {
+                                    if (project.status === "blocked") {
+                                        return <Project key={project.id} project={project} />  
+                                    };
+                                })
+                            }
+                        </div>
+                    </div>
+                    
+                    {/* Done Stage */}
+                    <div className="flex flex-col flex-shrink-0 w-72">
+                        <div className="flex items-center flex-shrink-0 h-10 px-2">
+                            <span className="block text-sm font-semibold">Done</span>
+                            <span
+                                className="flex items-center justify-center w-5 h-5 ml-2 text-sm font-semibold text-indigo-500 bg-white rounded bg-opacity-30"
+                            >
+                                { doneProjects?.length }
+                            </span>
+                        </div>
+
+                        <div className="flex flex-col pb-2 overflow-auto">
+                            { isLoading && <ProjectsLoadingScreen /> }
+
+                            { error && <ProjectsError error={error} title="Error" /> }
+
+                            { 
+                                projects?.map((project) => {
+                                    if (project.status === "done") {
+                                        return <Project key={project.id} project={project} />  
+                                    };
+                                })
+                            }
+                        </div>
+                    </div>
+                    
+                    <div className="flex-shrink-0 w-6"></div>
+                </div>
+            </div>
+        </>
+    );
+};
+
+export default Projects;

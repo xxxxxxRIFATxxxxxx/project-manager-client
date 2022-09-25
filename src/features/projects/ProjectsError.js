@@ -1,6 +1,6 @@
 import React from 'react';
 
-const TeamsError = ({ error, title }) => {
+const ProjectsError = ({ error, title }) => {
     const { data } = error;
 
     return (
@@ -30,4 +30,4 @@ const TeamsError = ({ error, title }) => {
     );
 };
 
-export default TeamsError;
+export default ProjectsError;
