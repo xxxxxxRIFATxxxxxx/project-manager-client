@@ -35,8 +35,7 @@ const Projects = () => {
     };
 
     const doSearch = (value) => {
-        const searchResult = projects.filter(project => project.title.includes(value));
-        console.log(searchResult)
+        
     };
 
     const handleSearch = debounceHandler(doSearch, 500);
